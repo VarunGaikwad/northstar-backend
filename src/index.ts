@@ -1,0 +1,54 @@
+import "dotenv/config";
+import express, { type Request, type Response } from "express";
+import { env } from "./config/env";
+import { prisma } from "./db/prisma";
+import { errorHandler } from "./middleware/errorHandler";
+import authRoutes from "./modules/auth/auth.routes";
+import userRoutes from "./modules/users/users.routes";
+import folderRoutes from "./modules/folders/folders.routes";
+import favlinkRoutes from "./modules/favlinks/favlinks.routes";
+import weatherRoutes from "./modules/weather/weather.routes";
+import lrtRoutes from "./modules/lrt/lrt.routes";
+import attendanceRoutes from "./modules/attendance/attendance.routes";
+
+const app = express();
+const port = env.PORT;
+
+// Parse JSON request bodies
+app.use(express.json());
+
+// Health check
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok" });
+});
+
+// Hello route (original behavior preserved)
+app.get("/", (_req: Request, res: Response) => {
+  res.send("Hello, TypeScript!");
+});
+
+// API routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/folders", folderRoutes);
+app.use("/api/favlinks", favlinkRoutes);
+app.use("/api/weather", weatherRoutes);
+app.use("/api/lrt", lrtRoutes);
+app.use("/api/attendance", attendanceRoutes);
+
+// Global error handler
+app.use(errorHandler);
+
+// Graceful shutdown: disconnect Prisma before exiting
+async function shutdown(signal: string) {
+  console.log(`\n${signal} received, closing Prisma connection...`);
+  await prisma.$disconnect();
+  process.exit(0);
+}
+
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
