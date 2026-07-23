@@ -28,4 +28,6 @@ export const env = {
   EMAIL_FROM: process.env.EMAIL_FROM ?? "no-reply@northstar.app",
 
   FRONTEND_URL: getEnvVar("FRONTEND_URL", "http://localhost:5173"),
+
+  UNSPLASH_ACCESS_KEY: getEnvVar("UNSPLASH_ACCESS_KEY"),
 };

@@ -10,6 +10,7 @@ import favlinkRoutes from "./modules/favlinks/favlinks.routes";
 import weatherRoutes from "./modules/weather/weather.routes";
 import lrtRoutes from "./modules/lrt/lrt.routes";
 import attendanceRoutes from "./modules/attendance/attendance.routes";
+import backgroundRoutes from "./modules/background/background.routes";
 
 const app = express();
 const port = env.PORT;
@@ -35,6 +36,7 @@ app.use("/api/favlinks", favlinkRoutes);
 app.use("/api/weather", weatherRoutes);
 app.use("/api/lrt", lrtRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/background", backgroundRoutes);
 
 // Global error handler
 app.use(errorHandler);
