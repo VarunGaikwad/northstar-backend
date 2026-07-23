@@ -1,0 +1,780 @@
+{
+  "info": {
+    "_postman_id": "northstar-backend-collection",
+    "name": "Northstar Backend",
+    "description": "Postman collection for the Northstar backend API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health & Root",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Hello Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-reset-token\",\n  \"password\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Folders",
+      "item": [
+        {
+          "name": "Create Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Work\",\n  \"parentId\": \"optional-parent-cuid\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "folders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Folders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "folders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Folder",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/folders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "folders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "folder-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Folder",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Folder Name\",\n  \"parentId\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/folders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "folders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "folder-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Folder",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/folders/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "folders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "folder-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Favlinks",
+      "item": [
+        {
+          "name": "Create Favlink",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Google\",\n  \"url\": \"https://google.com\",\n  \"folderId\": \"optional-folder-cuid\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/favlinks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favlinks"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Favlinks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/favlinks?folderId=optional-folder-cuid",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favlinks"],
+              "query": [
+                {
+                  "key": "folderId",
+                  "value": "optional-folder-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Favlink",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/favlinks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favlinks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "favlink-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Favlink",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"url\": \"https://example.com\",\n  \"folderId\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/favlinks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favlinks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "favlink-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Favlink",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/favlinks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favlinks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "favlink-cuid"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Weather",
+      "item": [
+        {
+          "name": "Get Weather",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/weather?lat=35.6895&lon=139.6917",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "weather"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "35.6895"
+                },
+                {
+                  "key": "lon",
+                  "value": "139.6917"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "LRT",
+      "item": [
+        {
+          "name": "Get Timetable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/lrt/timetable?date=2026-07-23&direction=INBOUND&dayType=WEEKDAY",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "lrt", "timetable"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-07-23"
+                },
+                {
+                  "key": "direction",
+                  "value": "INBOUND"
+                },
+                {
+                  "key": "dayType",
+                  "value": "WEEKDAY"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Stations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/lrt/stations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "lrt", "stations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/lrt/search?date=2026-07-23&from=0&to=10&dayType=WEEKDAY&includeStops=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "lrt", "search"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-07-23"
+                },
+                {
+                  "key": "from",
+                  "value": "0"
+                },
+                {
+                  "key": "to",
+                  "value": "10"
+                },
+                {
+                  "key": "dayType",
+                  "value": "WEEKDAY"
+                },
+                {
+                  "key": "includeStops",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Clock In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tz\": \"Asia/Tokyo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/clock-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "clock-in"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clock Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tz\": \"Asia/Tokyo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/clock-out",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "clock-out"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My Day",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/me?date=2026-07-23&tz=Asia/Tokyo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "me"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-07-23"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Tokyo"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/me/range?from=2026-07-01&to=2026-07-23&tz=Asia/Tokyo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "me", "range"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-07-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-07-23"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Tokyo"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My Month",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/me/month?month=2026-07&tz=Asia/Tokyo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", "me", "month"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "2026-07"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Tokyo"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Correct Record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkIn\": \"09:00\",\n  \"checkOut\": \"18:00\",\n  \"reason\": \"Forgot to clock in/out\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "attendance-record-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Record History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendance/:id/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "attendance", ":id", "history"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "attendance-record-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Background",
+      "item": [
+        {
+          "name": "Get Background",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/background?query=nature",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "background"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "nature"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

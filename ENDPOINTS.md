@@ -8,6 +8,7 @@ Base URL: `http://localhost:<PORT>` (default `3000`, configured in `.env`)
 
 ## Table of Contents
 
+- [Frontend Integration Guide](#frontend-integration-guide)
 - [Health & Root](#health--root)
 - [Auth](#auth)
 - [Users](#users)
@@ -17,6 +18,109 @@ Base URL: `http://localhost:<PORT>` (default `3000`, configured in `.env`)
 - [LRT Timetable](#lrt-timetable)
 - [Attendance](#attendance)
 - [Error Response Format](#error-response-format)
+- [TypeScript Type Definitions](#typescript-type-definitions)
+
+---
+
+## Frontend Integration Guide
+
+Read this first — it covers everything a frontend app needs to know before calling any
+endpoint. Endpoint-specific details are in the sections below.
+
+### Base URL
+
+- Default: `http://localhost:3000`
+- All API routes are mounted under the `/api` prefix (except `/health` and `/`).
+- The base URL has **no trailing slash**; do not double-slash paths (e.g. `/api/auth/login`, not `/api/auth/login/`).
+
+### CORS
+
+⚠️ **No CORS middleware is configured on the backend.** This affects how you call the API:
+
+- If your frontend runs on a **different origin** than the API (e.g. `http://localhost:5173` → `http://localhost:3000`), the browser will block the responses unless backend CORS is added. Three options:
+  1. Add `cors` middleware on the backend (recommended for production), or
+  2. In dev, set up a **Vite/webpack dev-server proxy** that forwards `/api` to the backend (e.g. Vite `server.proxy['/api'] = { target: 'http://localhost:3000', changeOrigin: true }`) and call the API via the same origin as your frontend, or
+  3. Run frontend and backend behind the same origin via a reverse proxy.
+
+The backend's own `FRONTEND_URL` env var (default `http://localhost:5173`) is currently used only for password-reset email links — it does **not** enable CORS.
+
+### Authentication model
+
+The API uses **Bearer JWT** access tokens. There is **no refresh-token endpoint**.
+
+**Obtaining a token** — call `/api/auth/login` (or `/api/auth/register`); the token is returned **only** in the JSON response body (there is no `Set-Cookie` header):
+```json
+{ "success": true, "data": { "user": { ... }, "accessToken": "eyJ..." } }
+```
+
+**Sending a token** — store `accessToken` (e.g. in `localStorage` or a JS-readable cookie) and attach it to every protected request:
+```http
+Authorization: Bearer <accessToken>
+```
+
+**Token lifetime** — **7 days** by default (env `JWT_EXPIRES_IN`). After expiry the token is rejected with `401 "Invalid or expired token"` and the user must **log in again** (no silent refresh). Plan your UI to catch `401` and redirect to the login screen.
+
+**JWT payload** (for debugging only — do not rely on the client reading it):
+```json
+{ "userId": "clx...", "email": "user@example.com", "role": "USER" }
+```
+
+### Roles
+
+- `USER` — default role assigned on registration.
+- `ADMIN` — exists in the schema but **no admin-only endpoints are currently exposed**; role-based gating is reserved for future use. Treat all protected endpoints as user-scoped (each user only sees their own data).
+
+### Response envelope
+
+Every endpoint returns JSON. Successful responses:
+```json
+{ "success": true, "data": <payload> }            // most endpoints
+{ "success": true, "message": "..." }             // action endpoints (delete/reset)
+```
+List endpoints put the array inside `data`; mutation endpoints put the created/updated object inside `data`.
+
+### Conventions the frontend should rely on
+
+- **Timestamps** — all `createdAt`/`updatedAt`/`*At` instants are **UTC ISO 8601** strings (`2026-07-19T10:38:00.000Z`). Display them in the user's timezone on the client. The Attendance module is timezone-aware and also returns `*Local` fields (`"HH:MM"`) already converted to the record's timezone.
+- **Dates** — daily keys use `YYYY-MM-DD`.
+- **Times** — LRT/Attendance `HH:MM` fields are **24-hour** strings (`"5:41"`, `"19:38"`) — note the leading zero is **omitted** for hours < 10 (e.g. `"5:41"`, not `"05:41"`). Keep this in mind when sorting/parsing.
+- **IDs** — opaque strings (Prisma CUIDs like `clx...`). Never assume numeric IDs.
+- **Enums (string literals)** — always compare case-sensitively: `role` ∈ `{"USER","ADMIN"}`, attendance `field` ∈ `{"CHECK_IN","CHECK_OUT"}`.
+- **Numbers** — weather: temperature `°C`, wind `km/h`, humidity `%`. Attendance: `workedMinutes`/`durationMins`/`stopsBetween` are integers in **minutes**.
+- **Validation errors** come back as `400` with a human-readable `error` string safe to surface to users — use it to populate form-field errors.
+- **Empty states** — `GET /api/attendance/me` returns `"attendance": null` when no record exists for the day; list endpoints return `"data": []` when empty.
+
+### Suggested auth flow on the client
+
+```
+1. POST /api/auth/login                -> store data.accessToken + data.user
+2. Attach `Authorization: Bearer <token>` to a shared fetch/axios instance
+3. On any 401 response  -> clear token, redirect to /login
+4. For workflows: GET /api/users/me to hydrate the session/profile
+5. Password reset: POST forgot-password -> (user clicks email link) -> POST reset-password -> re-login
+```
+
+### Suggested fetch wrapper
+
+```ts
+const API = {
+  async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const token = localStorage.getItem('accessToken');
+    const res = await fetch(`/api${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
+      },
+    });
+    const body = await res.json().catch(() => null);
+    if (!res.ok || !body?.success) throw new Error(body?.error ?? `HTTP ${res.status}`);
+    return body.data ?? body;
+  },
+};
+// Usage: const user = await API.request<User>('/users/me');
+```
 
 ---
 
@@ -976,3 +1080,231 @@ All errors follow a consistent shape:
 |29 | GET    | `/api/attendance/:id/history`| Yes| Attendance correction history |
 
 **Total: 29 endpoints** (6 public root/weather/lrt, 4 auth, 2 users, 5 folders, 5 favlinks, 7 attendance)
+
+---
+
+## TypeScript Type Definitions
+
+Paste-ready types for the frontend. These mirror the backend DTOs (see `src/modules/*/...types.ts`).
+Replace the Prisma enum imports with the string-literal unions shown below — these are exactly
+the string values the API sends on the wire (stored as UTC ISO / `YYYY-MM-DD` / `"H:MM"`).
+
+```ts
+// ── Shared responses ────────────────────────────────────────────────
+export type ApiSuccess<T> = { success: true; data: T };
+export type ApiMessage   = { success: true; message: string };
+export type ApiError     = { success: false; error: string };
+
+// ── Auth & Users ────────────────────────────────────────────────────
+export type Role = "USER" | "ADMIN";
+
+export interface User {
+  id: string;            // Prisma CUID, e.g. "clx..."
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: Role;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: string;     // UTC ISO 8601
+}
+
+export interface AuthResponse {
+  user: User;
+  accessToken: string;   // JWT, 7d default lifetime
+}
+
+// ── Folders ─────────────────────────────────────────────────────────
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── FavLinks ────────────────────────────────────────────────────────
+export interface FavLink {
+  id: string;
+  title: string;
+  url: string;
+  folderId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Weather ─────────────────────────────────────────────────────────
+export interface WeatherLocation {
+  city: string;
+  region: string;
+  country: string;
+  lat: number;
+  lon: number;
+  source: "ip" | "user";   // "ip" = geolocated, "user" = lat/lon supplied
+}
+
+export interface WeatherConditions {
+  temperature: number;     // °C
+  feelsLike: number;       // °C
+  condition: string;
+  conditionCode: number;   // WMO weather interpretation code
+  humidity: number;       // %
+  windSpeed: number;      // km/h
+  windDirection: number;  // degrees
+}
+
+export interface WeatherResponse {
+  location: WeatherLocation;
+  weather: WeatherConditions;
+}
+
+// ── LRT Timetable ──────────────────────────────────────────────────
+export type LrtDayType   = "WEEKDAY" | "HOLIDAY";
+export type LrtDirection = "INBOUND" | "OUTBOUND";
+export type LrtTrainType = "LOCAL" | "RAPID";
+export type LrtStopType  = "STOP" | "PASS" | "NOSERVICE";
+
+export interface Station {
+  code: number;            // 0..18, inbound order
+  name: string;            // Japanese
+  nameEn: string | null;
+  nameRomaji: string | null;
+}
+
+export interface Stop {
+  stopSequence: number;
+  stationCode: number;
+  stationName: string;
+  stationNameEn: string | null;
+  arrival: string | null;   // "H:MM" 24h (leading zero omitted)
+  departure: string | null; // "H:MM" 24h
+  isNextDay: boolean;
+  stopType: LrtStopType;
+}
+
+export interface Trip {
+  tripIndex: number;
+  dayType: LrtDayType;
+  direction: LrtDirection;
+  trainType: LrtTrainType;
+  firstDeparture: string;
+  firstDepartureNextDay: boolean;
+  stopsServed: number;
+  stops: Stop[];
+}
+
+export interface DirectionTimetable {
+  direction: LrtDirection;
+  tripCount: number;
+  trips: Trip[];
+}
+
+export interface LrtTimetableResponse {
+  date: string;            // YYYY-MM-DD
+  dayType: LrtDayType;
+  isToday: boolean;
+  directions: DirectionTimetable[];
+}
+
+export interface LrtStationsResponse { stations: Station[] }
+
+// ── LRT Route search ────────────────────────────────────────────────
+export interface RouteStop {
+  stationCode: number;
+  stationName: string;
+  stationNameEn: string | null;
+  time: string | null;     // departure at origin / arrival at destination
+  isNextDay: boolean;
+}
+
+export interface RouteTrip {
+  tripIndex: number;
+  trainType: LrtTrainType;
+  direction: LrtDirection;
+  from: RouteStop;
+  to: RouteStop;
+  durationMins: number;
+  stopsBetween: number;    // intermediate stations, exclusive of endpoints
+  stops: Stop[];           // full journey, same shape as /timetable
+}
+
+export interface LrtRouteSearchResponse {
+  date: string;
+  dayType: LrtDayType;
+  isToday: boolean;
+  from: Station;
+  to: Station;
+  direction: LrtDirection;
+  tripCount: number;
+  trips: RouteTrip[];
+}
+
+// ── Attendance ─────────────────────────────────────────────────────
+export type AttendanceField = "CHECK_IN" | "CHECK_OUT";
+
+export interface AttendanceEdit {
+  id: string;
+  field: AttendanceField;
+  oldValue: string | null;     // UTC ISO
+  oldValueLocal: string | null;// "HH:MM" in record tz
+  newValue: string | null;
+  newValueLocal: string | null;
+  reason: string | null;
+  editedAt: string;            // UTC ISO
+  editedByUserId: string;
+}
+
+export interface Attendance {
+  id: string;
+  userId: string;
+  date: string;               // YYYY-MM-DD (record's timezone)
+  timezone: string;           // IANA name, e.g. "Asia/Tokyo"
+  checkInAt: string | null;   // UTC ISO
+  checkOutAt: string | null;
+  checkInLocal: string | null;
+  checkOutLocal: string | null;
+  workedMinutes: number | null;// null until checked out
+  createdAt: string;
+  updatedAt: string;
+  edits: AttendanceEdit[];
+}
+
+export interface AttendanceDay {
+  date: string;
+  timezone: string;
+  attendance: Attendance | null; // null when no record that day
+}
+
+export interface AttendanceRange {
+  from: string;
+  to: string;
+  timezone: string;
+  count: number;
+  records: Attendance[];      // ordered by date ascending
+}
+
+export interface AttendanceSummary {
+  daysPresent: number;
+  daysCompleted: number;
+  daysClockedOutPending: number;
+  totalWorkedMinutes: number;
+  averageWorkedMinutes: number | null;
+  longestDayMinutes: number | null;
+  shortestDayMinutes: number | null;
+}
+
+export interface AttendanceMonth {
+  month: string;              // YYYY-MM
+  timezone: string;
+  from: string;               // YYYY-MM-DD
+  to: string;                 // YYYY-MM-DD
+  daysInMonth: number;
+  count: number;
+  summary: AttendanceSummary;
+  records: Attendance[];
+}
+
+export interface AttendanceEditHistory {
+  edits: AttendanceEdit[];    // oldest first
+}
+```
